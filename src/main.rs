@@ -7,6 +7,7 @@ mod uuid_command;
 
 fn cli() -> Command {
     Command::new("astrid")
+        .author("Granit Jupolli <https://github.com/G-Jupolli>")
         .subcommand_required(true)
         .arg_required_else_help(true)
         .subcommand(
@@ -21,7 +22,7 @@ fn cli() -> Command {
         )
         .subcommand(
             Command::new("yrun")
-                .about("Runns 'yarn install && yarn dev' in the terminal")
+                .about("Runs 'yarn install && yarn dev' in the terminal")
                 .arg(
                     Arg::new("frontend")
                         .long("frontend")
