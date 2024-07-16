@@ -1,6 +1,8 @@
 use clap::{Arg, ArgAction, Command};
+use run_command::run_yarn;
 use uuid_command::generate_uuid;
 
+mod run_command;
 mod uuid_command;
 
 fn cli() -> Command {
@@ -17,9 +19,35 @@ fn cli() -> Command {
                         .action(ArgAction::SetTrue),
                 ),
         )
+        .subcommand(
+            Command::new("yrun")
+                .about("Runns 'yarn install && yarn dev' in the terminal")
+                .arg(
+                    Arg::new("frontend")
+                        .long("frontend")
+                        .short('f')
+                        .action(ArgAction::SetTrue)
+                        .help("Default to running in the ./frontend directory"),
+                )
+                .arg(
+                    Arg::new("directory")
+                        .long("dir")
+                        .short('d')
+                        .action(ArgAction::Set)
+                        .help("Specify which directory to run in from CWD"),
+                )
+                .arg(
+                    Arg::new("clear_node_modules")
+                        .long("clear_modules")
+                        .short('c')
+                        .action(ArgAction::SetTrue)
+                        .help("Clear the existing node modules"),
+                ),
+        )
 }
 
-fn main() {
+#[tokio::main]
+async fn main() {
     let matches = cli().get_matches();
 
     match matches.subcommand() {
@@ -30,6 +58,24 @@ fn main() {
                 .unwrap_or(false);
 
             generate_uuid(upper_case)
+        }
+        Some(("yrun", sub_matches)) => {
+            let front_end = sub_matches
+                .get_one::<bool>("frontend")
+                .map(|b| b.clone())
+                .unwrap_or(false);
+
+            let clear_node = sub_matches
+                .get_one::<bool>("clear_node_modules")
+                .map(|b| b.clone())
+                .unwrap_or(false);
+
+            let dir = sub_matches
+                .get_one::<String>("directory")
+                .map(|s| s.to_string())
+                .unwrap_or("./".to_string());
+
+            run_yarn(front_end, dir, clear_node).await;
         }
         _ => unreachable!(),
     }
