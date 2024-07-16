@@ -11,3 +11,11 @@ Astrid is written in rust and needs rust to be installed [here](https://www.rust
 
 With rust installed.  \
 The only step to building is to run `cargo build` in the root directory.
+
+## Useage
+
+Astrid requires a subcommand which can all be found when running `astrid -h`
+
+## Help
+
+Running `astrid -h` will bring up the help meny.
