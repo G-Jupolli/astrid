@@ -39,7 +39,7 @@ pub async fn run_yarn(front_end: bool, dir: String, clear_node: bool) {
                     println!("  - \x1b[92mComplete\x1b[0m: Clearing Node Modules")
                 }
                 Err(_) => {
-                    println!("  - \x1b[91mFailed\x1b[0m: Failed to remove node modules",);
+                    println!("  - \x1b[91mFailed\x1b[0m: Failed to remove node modules");
                     std::process::exit(1);
                 }
             };

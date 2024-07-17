@@ -34,10 +34,10 @@ pub fn generate_uuid(count: i32, upper_case: bool, comma: bool) {
 
     match cli_clipboard::set_contents(base_str) {
         Ok(_) => {
-            println!("Copied to clipboard");
+            println!("  - \x1b[92mSuccess\x1b[0m: Copy to clip board");
         }
         Err(_) => {
-            println!("Clipboard copy failure");
+            println!("  - \x1b[91mFailed\x1b[0m: Copy to clip board");
         }
     };
 }
