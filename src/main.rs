@@ -18,6 +18,18 @@ fn cli() -> Command {
                         .long("uppercase")
                         .short('u')
                         .action(ArgAction::SetTrue),
+                )
+                .arg(
+                    Arg::new("amount")
+                        .long("amount")
+                        .short('n')
+                        .action(ArgAction::Set),
+                )
+                .arg(
+                    Arg::new("comma")
+                        .long("comma")
+                        .short('c')
+                        .action(ArgAction::SetTrue),
                 ),
         )
         .subcommand(
@@ -58,7 +70,17 @@ async fn main() {
                 .map(|b| b.clone())
                 .unwrap_or(false);
 
-            generate_uuid(upper_case)
+            let count = sub_matches
+                .get_one::<String>("amount")
+                .map(|i| i.parse().expect("Invalid Number"))
+                .unwrap_or(1);
+
+            let comma = sub_matches
+                .get_one::<bool>("comma")
+                .map(|b| b.clone())
+                .unwrap_or(false);
+
+            generate_uuid(count, upper_case, comma)
         }
         Some(("yrun", sub_matches)) => {
             let front_end = sub_matches
