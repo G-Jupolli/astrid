@@ -1,4 +1,4 @@
-use clap::{Arg, ArgAction, Command};
+use clap::{Arg, ArgAction, ArgMatches, Command};
 use run_command::run_yarn;
 use uuid_command::generate_uuid;
 
@@ -89,12 +89,25 @@ fn cli() -> Command {
                         .short('m')
                         .action(ArgAction::SetTrue)
                         .help("Minify to one line"),
+                )
+                .arg(
+                    Arg::new("remove_original")
+                        .long("remove")
+                        .short('r')
+                        .action(ArgAction::SetTrue)
+                        .help("rm the original file"),
+                )
+                .arg(
+                    Arg::new("directory")
+                        .long("dir")
+                        .short('d')
+                        .action(ArgAction::Set)
+                        .help("Specify which directory to place parced file"),
                 ),
         )
 }
 
-#[tokio::main]
-async fn main() {
+async fn generate_cli() {
     let matches = cli().get_matches();
 
     match matches.subcommand() {
@@ -127,22 +140,15 @@ async fn main() {
                 .map(|b| b.clone())
                 .unwrap_or(false);
 
-            let dir = sub_matches
-                .get_one::<String>("directory")
-                .map(|s| s.to_string())
-                .unwrap_or("./".to_string());
+            let dir = get_string_val(sub_matches, "directory").unwrap_or("./".to_string());
 
             run_yarn(front_end, dir, clear_node).await;
         }
         Some(("oLine", sub_matches)) => {
-            let file_path = sub_matches
-                .get_one::<String>("file_path")
-                .map(|b| b.clone())
-                .unwrap();
+            let file_path = get_string_val(sub_matches, "file_path").unwrap();
 
-            let prefix = sub_matches.get_one::<String>("prefix").map(|b| b.clone());
-
-            let suffix = sub_matches.get_one::<String>("suffix").map(|b| b.clone());
+            let prefix = get_string_val(sub_matches, "prefix");
+            let suffix = get_string_val(sub_matches, "suffix");
 
             let (prefix, suffix) = match (&prefix, &suffix) {
                 (None, None) => {
@@ -155,13 +161,50 @@ async fn main() {
                 ),
             };
 
-            let no_new_line = sub_matches
-                .get_one::<bool>("minify")
-                .map(|b| b.clone())
-                .unwrap_or(false);
+            let no_new_line = get_bool_flag(sub_matches, "minify");
+            let remove_original = get_bool_flag(sub_matches, "remove_original");
+            let dir = get_string_val(sub_matches, "directory");
 
-            on_line_command::on_line_command(file_path, prefix, suffix, no_new_line);
+            on_line_command::on_line_command(
+                file_path,
+                prefix,
+                suffix,
+                no_new_line,
+                remove_original,
+                dir,
+            );
         }
         _ => unreachable!(),
     }
+}
+
+fn get_bool_flag(sub_matches: &ArgMatches, id: &str) -> bool {
+    sub_matches
+        .get_one::<bool>(id)
+        .map(|b| b.clone())
+        .unwrap_or(false)
+}
+
+fn get_string_val(sub_matches: &ArgMatches, id: &str) -> Option<String> {
+    sub_matches.get_one::<String>(id).map(|b| b.clone())
+}
+
+#[tokio::main]
+async fn main() {
+    generate_cli().await
+    // let file_path = "t.txt";
+
+    // let x = Path::new(&file_path);
+
+    // let y = x.file_name().unwrap();
+    // let z = x.file_stem().unwrap();
+
+    // let mut ansestors = x.ancestors();
+
+    // println!("file_path {file_path}");
+    // println!("y {:?}", y);
+    // println!("z {:?}", z);
+    // println!("{:?}", ansestors.next());
+    // println!("{:?}", ansestors.next());
+    // println!("{:?}", ansestors.next());
 }
