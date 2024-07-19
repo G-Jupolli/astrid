@@ -2,6 +2,7 @@ use clap::{Arg, ArgAction, Command};
 use run_command::run_yarn;
 use uuid_command::generate_uuid;
 
+mod on_line_command;
 mod run_command;
 mod uuid_command;
 
@@ -57,6 +58,39 @@ fn cli() -> Command {
                         .help("Clear the existing node modules"),
                 ),
         )
+        .subcommand(
+            Command::new("oLine")
+                .about("Runs 'yarn install && yarn dev' in the terminal")
+                .arg(
+                    Arg::new("file_path")
+                        .long("file_path")
+                        .short('f')
+                        .action(ArgAction::Set)
+                        .required(true)
+                        .help("Select a file path"),
+                )
+                .arg(
+                    Arg::new("prefix")
+                        .long("prefix")
+                        .short('p')
+                        .action(ArgAction::Set)
+                        .help("Append the prefix to the start of each line"),
+                )
+                .arg(
+                    Arg::new("suffix")
+                        .long("suffix")
+                        .short('s')
+                        .action(ArgAction::Set)
+                        .help("Append the suffix to the end of each line"),
+                )
+                .arg(
+                    Arg::new("minify")
+                        .long("minify")
+                        .short('m')
+                        .action(ArgAction::SetTrue)
+                        .help("Minify to one line"),
+                ),
+        )
 }
 
 #[tokio::main]
@@ -99,6 +133,34 @@ async fn main() {
                 .unwrap_or("./".to_string());
 
             run_yarn(front_end, dir, clear_node).await;
+        }
+        Some(("oLine", sub_matches)) => {
+            let file_path = sub_matches
+                .get_one::<String>("file_path")
+                .map(|b| b.clone())
+                .unwrap();
+
+            let prefix = sub_matches.get_one::<String>("prefix").map(|b| b.clone());
+
+            let suffix = sub_matches.get_one::<String>("suffix").map(|b| b.clone());
+
+            let (prefix, suffix) = match (&prefix, &suffix) {
+                (None, None) => {
+                    println!("  - \x1b[91mFailed\x1b[0m: Prefix -p or Suffix -s required");
+                    std::process::exit(1);
+                }
+                _ => (
+                    prefix.unwrap_or("".to_string()),
+                    suffix.unwrap_or("".to_string()),
+                ),
+            };
+
+            let no_new_line = sub_matches
+                .get_one::<bool>("minify")
+                .map(|b| b.clone())
+                .unwrap_or(false);
+
+            on_line_command::on_line_command(file_path, prefix, suffix, no_new_line);
         }
         _ => unreachable!(),
     }
